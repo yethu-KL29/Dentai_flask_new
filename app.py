@@ -40,12 +40,12 @@ def login():
     else:
         return jsonify({'error': 'Invalid email or password'})
 
-@app.route("/dashboard")
-def dashboard():
-    if 'user' in session:
-        return 'Welcome to the dashboard, {}'.format(session['user'])
-    else:
-        return redirect(url_for('home'))
+# @app.route("/dashboard")
+# def dashboard():
+#     if 'user' in session:
+#         return 'Welcome to the dashboard, {}'.format(session['user'])
+#     else:
+#         return redirect(url_for('home'))
     
 @app.route("/register",methods=['POST'])
 def create_user():
