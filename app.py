@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, session, request, redirect, jsonify, url_for
 from pymongo import MongoClient
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -23,6 +23,18 @@ except Exception as e:
 db = client['MyDatabase']  # Change 'MyDatabase' to your actual database name
 users_collection = db['users']  # Change 'users' to your actual collection name
 messages_collection = db['messages']  # Change 'messages' to your actual collection name
+
+@app.route("/login", methods=['POST'])
+def login():
+    email = request.json['email']
+    password = request.json['pass']
+
+    user = users_collection.find_one({'email': email})
+    if user and user['pass'] == password:
+        session['user'] = user['email']
+        return jsonify({'status': 200, 'user_email': session['user']})
+    else:
+        return jsonify({'error': 'Invalid email or password'})
 
 @app.route("/register", methods=['POST'])
 def create_user():
@@ -65,55 +77,6 @@ def send_message():
     messages_collection.insert_one(new_message)
     
     return jsonify({'status': 'Message sent successfully'})
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
-
-    if existing_user:
-        return jsonify({'error': 'User with this email already exists'}), 409
-
-    # Insert the new user into the database
-    result = users_collection.insert_one(new_user)
-    return jsonify({'id': str(result.inserted_id), 'msg': 'User created'}), 201
-
-@app.route("/users")
-def get_users():
-    users = []
-    for user in users_collection.find():
-        users.append({
-            'id': str(user['_id']),
-            'name': user['name'],
-            'email': user['email'],
-            'pass':user['pass']
-            # Assuming your password field is named 'pass'
-        })
-    return jsonify(users)
-
-@app.route('/send-message', methods=['POST'])
-def send_message():
-    full_name = request.form.get('full_name')
-    email = request.form.get('email')
-    subject = request.form.get('subject')
-    phone_number = request.form.get('phone_number')
-    message = request.form.get('message')
-
-    # Here you can implement your logic to send the message
-    # For example, you can use an email service like SendGrid or Gmail API
-    # This is just a placeholder response
-    response = {
-        'status': 'success',
-        'message': 'Message sent successfully!',
-        'data': {
-            'full_name': full_name,
-            'email': email,
-            'subject': subject,
-            'phone_number': phone_number,
-            'message': message
-        }
-    }
-    
-    return jsonify(response)
 
 
 if __name__ == '__main__':
